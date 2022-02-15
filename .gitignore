@@ -72,3 +72,6 @@ Plugins/*/Intermediate/*
 
 # Cache files for the editor to use
 DerivedDataCache/*
+ONNXStyleTransfer/Saved/
+ONNXStyleTransfer/Binaries/Win64/
+ONNXStyleTransfer/Intermediate/
