@@ -52,8 +52,53 @@ void AMyActor::Tick(float DeltaTime) {
 
 		//create network and run model
 		UMyNeuralNetwork* myNetwork = NewObject<UMyNeuralNetwork>();
-		myNetwork->URunModel(wrappedImage);
+        TArray<FColor> SrcData = myNetwork->URunModel(wrappedImage);
+        //create texture for new int array
+        TextureFromImage_Internal(224, 224, SrcData, false);
 
 	}
 }
 
+void AMyActor::TextureFromImage_Internal(const int32 SrcWidth, const int32 SrcHeight, const TArray<FColor>& SrcData, const bool UseAlpha)
+{
+    // Create the texture
+    auto MyNeuralTexture = UTexture2D::CreateTransient(
+        SrcWidth,
+        SrcHeight,
+        //PF_B8G8R8A8
+        PF_R8G8B8A8
+    );
+
+    // Lock the texture so it can be modified
+    uint8* MipData = static_cast<uint8*>(MyNeuralTexture->PlatformData->Mips[0].BulkData.Lock(LOCK_READ_WRITE));
+
+    // Create base mip.
+    uint8* DestPtr = NULL;
+    const FColor* SrcPtr = NULL;
+    for (int32 y = 0; y < SrcHeight; y++)
+    {
+        DestPtr = &MipData[(SrcHeight - 1 - y) * SrcWidth * sizeof(FColor)];
+        SrcPtr = const_cast<FColor*>(&SrcData[(SrcHeight - 1 - y) * SrcWidth]);
+        for (int32 x = 0; x < SrcWidth; x++)
+        {
+            *DestPtr++ = SrcPtr->B;
+            *DestPtr++ = SrcPtr->G;
+            *DestPtr++ = SrcPtr->R;
+            if (UseAlpha)
+            {
+                *DestPtr++ = SrcPtr->A;
+            }
+            else
+            {
+                *DestPtr++ = 0xFF;
+            }
+            SrcPtr++;
+        }
+    }
+
+    // Unlock the texture
+    MyNeuralTexture->PlatformData->Mips[0].BulkData.Unlock();
+    MyNeuralTexture->UpdateResource();
+
+    //creating a texture as an input to a custom post processing effect
+}

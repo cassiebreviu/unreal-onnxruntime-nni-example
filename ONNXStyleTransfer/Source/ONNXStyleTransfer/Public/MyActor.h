@@ -23,4 +23,6 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	void TextureFromImage_Internal(const int32 SrcWidth, const int32 SrcHeight, const TArray<FColor>& SrcData, const bool UseAlpha);
+
 };

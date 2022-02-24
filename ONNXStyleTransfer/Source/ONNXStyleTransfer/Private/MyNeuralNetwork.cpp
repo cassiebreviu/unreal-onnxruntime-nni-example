@@ -27,20 +27,23 @@ UCameraComponent* camera;
 
 UMyNeuralNetwork::UMyNeuralNetwork()
 {
-    camera = NewObject<UCameraComponent>();
 	// Create the UNeuralNetwork object
 	Network = NewObject<UNeuralNetwork>((UObject*)GetTransientPackage(), UNeuralNetwork::StaticClass());
+    // Load the UNeuralNetwork object from a UNeuralNetwork UAsset
+    //const FString NetworkUAssetFilePath = TEXT("'/Game/Models/mosaic-9.mosaic-9'");
+    //Network = LoadObject<UNeuralNetwork>((UObject*)GetTransientPackage(), *NetworkUAssetFilePath);
+    // Check that the network was successfully loaded
+    //ensureMsgf(Network->IsLoaded(), TEXT("UNeuralNetwork could not loaded from %s."), *NetworkUAssetFilePath);
+    // Optionally set to CPU/GPU mode. This step is optional, if not called, it will use the device type that was saved on the loaded UAsset
+    // Network->SetDeviceType(ENeuralDeviceType::CPU);
+
+
     //TODO: fix model loading
-	const FString ONNXModelFilePath = TEXT("/Content/Models/mosaic-9.onnx");
+	const FString &ONNXModelFilePath = TEXT("C:/code/Unreal Projects/ONNXStyleTransfer/Content/Models/mosaic-9.onnx");
+    Network->SetDeviceType(ENeuralDeviceType::CPU);
 	if (Network->Load(ONNXModelFilePath))
 	{
-		// Pick between option a or b
-		// Option a) Set to GPU
-		if (Network->IsGPUSupported())
-			Network->SetDeviceType(ENeuralDeviceType::GPU);
-		// Option b) Set to CPU
-		Network->SetDeviceType(ENeuralDeviceType::CPU);
-		UE_LOG(LogTemp, Log, TEXT("Neural Network loaded successfully."))
+    	UE_LOG(LogTemp, Log, TEXT("Neural Network loaded successfully."))
 	}
 	// Check that the network was successfully loaded
 	else
@@ -49,23 +52,49 @@ UMyNeuralNetwork::UMyNeuralNetwork()
 	}
 
 }
-void UMyNeuralNetwork::URunModel(cv::Mat image)
+TArray<FColor> UMyNeuralNetwork::URunModel(cv::Mat image)
 {
     
     //Running inference
     // Fill input neural tensor
-    TArray<float> InArray = UPreProcessImage(image); // Assumed initialized with data and that InArray.Num() == Network->Num()
-    Network->SetInputFromVoidPointerCopy(InArray.GetData()); // Equivalent: Network->SetInputFromVoidPointerCopy(InArray.GetData());
+    const TArray<float> InArray = UPreProcessImage(image); // Assumed initialized with data and that InArray.Num() == Network->Num()
+    Network->SetInputFromArrayCopy(InArray); // Equivalent: Network->SetInputFromVoidPointerCopy(InArray.GetData());
     UE_LOG(LogTemp, Display, TEXT("Input tensor: %s."), *Network->GetInputTensor().ToString());
     // Run UNeuralNetwork
     Network->Run();
     //Read and print OutputTensor
-    const FNeuralTensor& OutputTensor = Network->GetOutputTensor();
-    UE_LOG(LogTemp, Display, TEXT("Output tensor: %s."), *OutputTensor.ToString());
+    //const FNeuralTensor& OutputTensor = Network->GetOutputTensor();
+    TArray<float> OutputTensor = Network->GetOutputTensor().GetArrayCopy<float>();
+    //UE_LOG(LogTemp, Display, TEXT("Output tensor: %s."), OutputTensor.ToString());
 
-    //TODO: apply output image to camera view post process
-    // taking the output and creating a texture as an input to a custom post processing effect. 
+    //create array of the correct pixel values from results
+    TArray<FColor> results;
+    for (int i = 0; i < OutputTensor.Num(); i+=3) {
+       
+       //change all neg num positive int
+       int R =  floor(abs(OutputTensor[i]));
+       int G =  floor(abs(OutputTensor[i+1]));
+       int B =  floor(abs(OutputTensor[i+2]));
+       int A = 0;
+
+       //if greater than 255 set to 255
+       if (R > 255) {
+           R = 255;
+       }
+       if (G > 255) {
+           G = 255;
+       }
+       if (B > 255) {
+           B = 255;
+       }
+       auto color = FColor(R, G, B, A);
+       //add to result
+       results.Add(color);
+    }
+    return results;
 }
+
+
 
 TArray<float> UMyNeuralNetwork::UPreProcessImage(cv::Mat image)
 {   
@@ -92,6 +121,3 @@ TArray<float> UMyNeuralNetwork::UPreProcessImage(cv::Mat image)
     }
     return output;
 }
-
-
-

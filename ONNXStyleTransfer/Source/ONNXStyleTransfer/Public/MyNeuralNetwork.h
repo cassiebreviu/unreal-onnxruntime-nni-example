@@ -26,7 +26,7 @@ class ONNXSTYLETRANSFER_API UMyNeuralNetwork : public UNeuralNetwork
 	public:
 		// Sets default values for this actor's properties
 		UMyNeuralNetwork();
-		void URunModel(cv::Mat image);
+		TArray<FColor> URunModel(cv::Mat image);
 		TArray<float> UPreProcessImage(cv::Mat image);
 	
 };
