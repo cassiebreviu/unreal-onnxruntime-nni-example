@@ -1,4 +1,4 @@
-# Pre-Release Unreal 5 Neural Network (NNI) plugin Example
+# Pre-Release Unreal 5 Neural Network (NNI) Plugin Example
 
 <img width="464" alt="image" src="https://user-images.githubusercontent.com/46505951/159554721-a8db2b64-ee6e-416f-8008-aa08c077b177.png">
 
