@@ -5,6 +5,10 @@
 
 This repo is meant to be used as an example of how to implement the new expiremental plugin in Unreal 5. This plugin implements [ONNX Runtime](https://onnxruntime.ai/docs/), which is a library to optimize and accelerate machine learning inferencing. Train in Python, deploy with C++, C#,  Java, JavaScript and more!
 
+Grab open source models to add to your project:
+- [ONNX Model Zoo](https://github.com/onnx/models)
+- [Huggingface Models](https://huggingface.co/models)
+
 Connect with ORT on Social!
 
 - [Twitter](https://twitter.com/onnxruntime)
